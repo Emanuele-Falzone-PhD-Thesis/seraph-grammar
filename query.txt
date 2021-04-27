@@ -1,0 +1,12 @@
+REGISTER QUERY people_to_be_tested {
+FROM STREAM kafka://localhost:9092/eventtopic 
+STARTING FROM Latest 
+WITH WINDOW RANGE PT4H
+MATCH
+    (patient:Patient)-[:TESTED_FOR {positive:true}]->(virus:Virus),
+    (person:Person)-[:ADMINISTERS|IS_WITH*1..3]-(patient)
+RETURN DISTINCT person.name, virus.name ;
+EMIT ON ENTERING 
+EVERY 1 Event 
+INTO kafka://localhost:9092/resulttopic 
+}
